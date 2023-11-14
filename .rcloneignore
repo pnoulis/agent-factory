@@ -1,0 +1,9 @@
+/software/**
+/scripts/**
+/config/**
+/tmp/**
+/\.git/**
+/\.gitmodules
+/\.rcloneignore
+/\.gitignore
+/Makefile
