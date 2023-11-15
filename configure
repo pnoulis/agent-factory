@@ -51,7 +51,7 @@ decrypt_secrets() {
 }
 
 cleanup() {
-    rm config.env
+    rm -f config.env
 }
 
 parse_args(){

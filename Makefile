@@ -11,9 +11,14 @@ project_description='Infrastructure for agent-factory project'
 project_keywords='agent-factory,af,infrastructure'
 project_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
 
+# Dotenv
+dotenv=$(HOME)/bin/dotenv
 dotenvdirs:=env/* config.env
 dotenvfile:=.env
 loadenv:=set -a; source $(dotenvfile)
+
+# Cloud storage
+cloud=scripts/gdrive.sh
 
 #	The shell that is going to execute the recipies.
 SHELL									 = /usr/bin/bash
@@ -96,7 +101,7 @@ run: dotenv $$(file)
 dotenv: $(dotenvfile)
 
 $(dotenvfile): $(dotenvdirs)
-	dotenv $^ | sort > $@
+	$(dotenv) $^ | sort > $@
 
 help:
 	@line=$$(grep -n '^.PHONY:[[:space:]]*help' Makefile | cut -d':' -f1)
@@ -111,5 +116,5 @@ help:
 .PHONY: pull-git
 .PHONY: push-git
 .PHONY: all
-.PHONY: env
+.PHONY: dotenv
 
