@@ -12,18 +12,26 @@ This repository hosts the **agent-factory** project split between
 
 *Infrastructure* and *Content*.
 
-Data that is classified as Infrastructure represent among other things:
+Data that is classified as Infrastructure are the support tools and metadata
+
+that enable product-lifecycle operations.
 
 - Tools
-- Documentation
-- Configuration data
+- Development process specifications
+- Product and Software requirement specifications
+- Developer environments
+- Integrations
+- Docker images
 - Scripts
 - Libraries
 - Metadata
+- Programs
 
-While Content refers to data that is not supportive in nature but
+While Content refers to data generated with the intent to advance the project
 
-rather are dependent in some way or another to the infrastructure.
+but not document or support the project. Content uses infrastructure while
+
+infrastructure should never make use of the content.
 
 ### Content
 All Content data is nested under the `dep/` and `usr/` secondary hierarchies such as:

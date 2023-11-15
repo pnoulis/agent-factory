@@ -1,4 +1,0 @@
-[submodule "software"]
-	path = departments/software
-	url = git@github.com:pnoulis/agent_factory.git
-	branch = master

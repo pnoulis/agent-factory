@@ -11,6 +11,10 @@ project_description='Infrastructure for agent-factory project'
 project_keywords='agent-factory,af,infrastructure'
 project_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
 
+dotenvdirs:=env/* config.env
+dotenvfile:=.env
+loadenv:=set -a; source $(dotenvfile)
+
 #	The shell that is going to execute the recipies.
 SHELL									 = /usr/bin/bash
 # Strict mode
@@ -66,12 +70,13 @@ push-cloud:
 	done
 
 run: file=
-run: $$(file)
+run: dotenv $$(file)
 	@if [[ "$${file:-}" == "" ]]; then
 	echo 'Usage: `make run file [args]`'
 	exit 1
 	fi
 	extension="$${file##*.}"
+	$(loadenv)
 	case $$extension in
 	sh)
 	$(SHELL) $$file $(args)
@@ -88,6 +93,10 @@ run: $$(file)
 	exit 1
 	fi
 
+dotenv: $(dotenvfile)
+
+$(dotenvfile): $(dotenvdirs)
+	dotenv $^ | sort > $@
 
 help:
 	@line=$$(grep -n '^.PHONY:[[:space:]]*help' Makefile | cut -d':' -f1)
@@ -102,4 +111,5 @@ help:
 .PHONY: pull-git
 .PHONY: push-git
 .PHONY: all
+.PHONY: env
 

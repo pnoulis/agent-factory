@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+set -o allexport
+set -o errexit
+set -o pipefail
+
+# Options
+GDRIVE_LOGIN=PN # pavlos noulis gdrive
+
 # Project
 project_name=agent-factory
 project_version=0.0.1
@@ -11,3 +18,123 @@ project_description='agent-factory escape rooms'
 project_keywords='agent-factory,af,ie'
 project_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
 
+main() {
+    parse_args "$@"
+    set -- "${POSARGS[@]}"
+    require rclone
+    require gpg
+    require dotenv
+    require bumpve
+    cleanup
+    decrypt_secrets
+}
+
+require() {
+    local cmd=$1
+    if [[ $cmd == "" ]]; then
+        echo 'require() missing argument $1'
+        exit 1
+    fi
+
+    printf "Checking for dependency: %-10s ..." $cmd
+    if command -v $cmd 2>&1 >/dev/null; then
+        printf "Installed!\n"
+    else
+        echo "Missing!"
+        exit 1
+    fi
+}
+
+decrypt_secrets() {
+    echo Decrypting .secrets.gpg
+    gpg --decrypt --quiet .secrets.gpg | grep -i $GDRIVE_LOGIN | cut -d'_' -f2- >> config.env
+}
+
+cleanup() {
+    rm config.env
+}
+
+parse_args(){
+    declare -ga POSARGS=()
+    while (($# > 0)); do
+        case "${1:-}" in
+            --with-pn-gdrive)
+                GDRIVE_LOGIN=PN
+                ;;
+            --with-ie-gdrive)
+                GDRIVE_LOGIN=IE
+                ;;
+            -C | --config=* | --config*)
+                CONFIG="$(parse_param "$@")" || shift $?
+                ;;
+            -d | --debug)
+                DEBUG=0
+                ;;
+            -h | --help)
+                usage
+                exit 0
+                ;;
+            -[a-zA-Z][a-zA-Z]*)
+                local i="${1:-}"
+                shift
+                local rest="$@"
+                set --
+                for i in $(echo "$i" | grep -o '[a-zA-Z]'); do
+                    set -- "$@" "-$i"
+                done
+                set -- $@ $rest
+                continue
+                ;;
+            --)
+                shift
+                POSARGS+=("$@")
+                ;;
+            -[a-zA-Z]* | --[a-zA-Z]*)
+                error "Unrecognized argument ${1:-}"
+                ;;
+            *)
+                POSARGS+=("${1:-}")
+                ;;
+        esac
+        shift
+    done
+}
+
+parse_param() {
+    local param arg
+    local -i toshift=0
+
+    if (($# == 0)); then
+        return $toshift
+    elif [[ "$1" =~ .*=.* ]]; then
+        param="${1%%=*}"
+        arg="${1#*=}"
+    elif [[ "${2-}" =~ ^[^-].+ ]]; then
+        param="$1"
+        arg="$2"
+        ((toshift++))
+    fi
+
+    if [[ -z "${arg-}" && ! "${OPTIONAL-}" ]]; then
+        fatal "${param:-$1} requires an argument"
+    fi
+
+    echo "${arg:-}"
+    return $toshift
+}
+
+quote() {
+    echo \'"$@"\'
+}
+
+error() {
+    echo "$@"
+    exit 1
+}
+
+debug() {
+    [ ! $DEBUG ] && return
+    echo debug: "$@" >&2
+}
+
+main "$@"

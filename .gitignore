@@ -2,6 +2,7 @@
 cloud/
 
 # Sensitive information
+.env
 .secrets
 .env.default
 .env.development
@@ -15,3 +16,7 @@ cloud/
 
 # emacs
 .#*
+
+# ./configure generated files
+/config.*
+
