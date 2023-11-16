@@ -25,6 +25,12 @@ SHELL									 = /usr/bin/bash
 .SECONDEXPANSION:
 .EXPORT_ALL_VARIABLES:
 
+# Directories
+# ------------------------------
+pkgdir=.
+pkgdir_abs=$(realpath -e $(pkgdir))
+depdir=$(pkgdir)/dep
+usrdir=$(pkgdir)/usr
 
 # Programs and their configuration
 # ------------------------------
@@ -38,12 +44,6 @@ loadenv:=set -a; source $(dotenvfile)
 cloud=scripts/gdrive.sh
 cloudignore=-iregex '.*/\(sofia\)' -prune -o
 
-# Directories
-# ------------------------------
-pkgdir=.
-pkgdir_abs=$(realpath -e $(pkgdir))
-depdir=$(pkgdir)/dep
-usrdir=$(pkgdir)/usr
 
 all:
 	@echo No target
@@ -125,6 +125,9 @@ clean:
 	rm -f .env
 	rm -f .secrets
 
+distclean: clean
+	rm -f config.env
+
 help:
 	@line=$$(grep -n '^.PHONY:[[:space:]]*help' Makefile | cut -d':' -f1)
 	tail Makefile --lines=+$$line
@@ -139,3 +142,5 @@ help:
 .PHONY: push-git
 .PHONY: all
 .PHONY: dotenv
+.PHONY: clean
+.PHONY: distclean
