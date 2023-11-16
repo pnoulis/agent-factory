@@ -7,16 +7,16 @@ set -o pipefail
 # Options
 GDRIVE_LOGIN=PN # pavlos noulis gdrive
 
-# Project
-project_name=agent-factory
-project_version=0.0.1
-project_license='UNLICENSED'
-project_repository='https://github.com/pnoulis/agent-factory'
-project_homepage='https://github.com/pnoulis/agent-factory#README'
-project_bugreport='https://github.com/pnoulis/agent-factory/issues'
-project_description='agent-factory escape rooms'
-project_keywords='agent-factory,af,ie'
-project_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
+# Pkg
+pkg_name=agent-factory
+pkg_version=0.0.1
+pkg_license='UNLICENSED'
+pkg_repository='https://github.com/pnoulis/agent-factory'
+pkg_homepage='https://github.com/pnoulis/agent-factory#README'
+pkg_bugreport='https://github.com/pnoulis/agent-factory/issues'
+pkg_description='IE group agent-factory project'
+pkg_keywords='Intelligent Entertainment,ie,IE,agent-factory,AF,af'
+pkg_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
 
 main() {
     parse_args "$@"

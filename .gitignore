@@ -20,3 +20,6 @@ cloud/
 # ./configure generated files
 /config.*
 
+# Transient data
+/var
+/run

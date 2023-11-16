@@ -68,34 +68,48 @@ for key in RCLONE_DRIVE_CLIENT_ID \
     fi
 done
 
+# Verify the package root directory has been found in the execution environment
+if [ "${pkgdir_abs:-}" == "" ]; then
+    echo "Required empty variable: \$pkgdir_abs"
+    exit 1
+fi
+
 case $command in
     push)
+        printf "Pushing %s -> remote/%s ... \n" $source $destination
         for arg in command source destination; do
             if [ "${!arg}" == "" ]; then
                 echo "Usage: $0 <command> <source> <destination>"
                 exit 1
             fi
         done
-        rclone copy --quiet --update --progress \
+        rclone copy --no-traverse --quiet --update --progress \
                $source :drive:$destination
+        if [ $? -gt 0 ]; then
+	          echo 'FAILED'
+	      else
+	          echo 'DONE'
+	      fi
+	      echo '------------------------------'
         ;;
     pull)
+        printf "Pulling remote/%s -> %s ... \n" $source $destination
         for arg in command source destination; do
             if [ "${!arg}" == "" ]; then
                 echo "Usage: $0 <command> <source> <destination>"
                 exit 1
             fi
         done
-        rclone copy --quiet --update --progress \
-               :drive:$source $PKGDIR/$destination
+        rclone copy --no-traverse --quiet --update --progress \
+               :drive:$source $pkgdir_abs/$destination
+        if [ $? -gt 0 ]; then
+	          echo 'FAILED'
+	      else
+	          echo 'DONE'
+	      fi
+	      echo '------------------------------'
         ;;
     list | ls)
-        for arg in command; do
-            if [ "${!arg}" == "" ]; then
-                echo "Usage: $0 <command>"
-                exit 1
-            fi
-        done
         rclone --quiet ls :drive:
         ;;
     *)

@@ -1,24 +1,15 @@
 #!/usr/bin/make
 
 # Project
-project_name=agent-factory
-project_version=0.0.1
-project_license='UNLICENSED'
-project_repository='https://github.com/pnoulis/agent-factory'
-project_homepage='https://github.com/pnoulis/agent-factory#README'
-project_bugreport='https://github.com/pnoulis/agent-factory/issues'
-project_description='Infrastructure for agent-factory project'
-project_keywords='agent-factory,af,infrastructure'
-project_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
-
-# Dotenv
-dotenv=$(HOME)/bin/dotenv
-dotenvdirs:=env/* config.env
-dotenvfile:=.env
-loadenv:=set -a; source $(dotenvfile)
-
-# Cloud storage
-cloud=scripts/gdrive.sh
+pkg_name=agent-factory
+pkg_version=0.0.1
+pkg_license='UNLICENSED'
+pkg_repository='https://github.com/pnoulis/agent-factory'
+pkg_homepage='https://github.com/pnoulis/agent-factory#README'
+pkg_bugreport='https://github.com/pnoulis/agent-factory/issues'
+pkg_description='IE group agent-factory project'
+pkg_keywords='Intelligent Entertainment,ie,IE,agent-factory,AF,af'
+pkg_author='pavlos noulis <pavlos.noulis@gmail.com> (https://github.com/pnoulis)'
 
 #	The shell that is going to execute the recipies.
 SHELL									 = /usr/bin/bash
@@ -35,16 +26,24 @@ SHELL									 = /usr/bin/bash
 .EXPORT_ALL_VARIABLES:
 
 
-# Programs and configuration
-RCLONE = /usr/bin/rclone
-RCLONE_GDRIVE = gdrive
+# Programs and their configuration
+# ------------------------------
+# Dotenv
+dotenv=$(HOME)/bin/dotenv
+dotenvdirs:=env/* config.env
+dotenvfile:=.env
+loadenv:=set -a; source $(dotenvfile)
 
-PKGNAME = agent-factory
-PKGDIR = .
-PKGDIR_ABS = $(realpath -e $(PKGDIR))
+# Cloud storage
+cloud=scripts/gdrive.sh
+cloudignore=-iregex '.*/\(sofia\)' -prune -o
 
-SUBMODULES = $(PKGDIR)/software
-DEPARTMENTS = $(PKGDIR)/software $(PKGDIR)/designs
+# Directories
+# ------------------------------
+pkgdir=.
+pkgdir_abs=$(realpath -e $(pkgdir))
+depdir=$(pkgdir)/dep
+usrdir=$(pkgdir)/usr
 
 all:
 	@echo No target
@@ -59,20 +58,39 @@ push-git:
 	done
 
 pull-cloud:
-# --update skip files that are newer on the destination
-	rclone copy \
-	--update \
-	--progress \
-	'$(RCLONE_GDRIVE):$(PKGNAME)' $(PKGDIR)
+	@$(loadenv)
+# pull temporary
+	$(cloud) pull tmp tmp/cloud/
+# pull root
+	$(cloud) pull root cloud/
+# pull the departments
+	while IFS= read -r -d $$'\0' dep; do
+	source="$${dep#*/}" # ./dep/software -> dep/software
+	$(cloud) pull "$$source" "$${source}/cloud/"
+	done < <(find $(depdir) -mindepth 1 -maxdepth 1 -type d -print0)
+# pull the users
+	while IFS= read -r -d $$'\0' usr; do
+	source="$${usr#*/}"
+	$(cloud) pull "$$source" "$${source}/cloud/"
+	done < <(find $(usrdir) -mindepth 1 -maxdepth 1 -type d $(cloudignore) -print0)
+
 
 push-cloud:
-# --update skip files that are newer on the destination
-	@for department in $(DEPARTMENTS); do
-	$(RCLONE) copy \
-	--update \
-	--progress \
-	$$department/cloud "$(RCLONE_GDRIVE):$(PKGNAME)/$${department#*/}"
-	done
+	@$(loadenv)
+# push temporary
+	$(cloud) push "tmp/cloud/" tmp
+# push root
+	$(cloud) push "cloud/" root
+# push the departments
+	while IFS= read -r -d $$'\0' dep; do
+	destination="dep/$$(dirname "$${dep#*/*/}")" # ./dep/software/cloud -> dep/software
+	$(cloud) push "$$dep/" "$$destination"
+	done < <(find $(depdir) -maxdepth 2 -type d -name cloud -print0)
+# push the users
+	while IFS= read -r -d $$'\0' usr; do
+	destination="usr/$$(dirname "$${usr#*/*/}")" # ./usr/pnoulis/cloud -> usr/pnoulis
+	$(cloud) push "$$usr/" "$$destination"
+	done < <(find $(usrdir) -maxdepth 2 -type d $(cloudignore) -name cloud -print0)
 
 run: file=
 run: dotenv $$(file)
@@ -103,6 +121,10 @@ dotenv: $(dotenvfile)
 $(dotenvfile): $(dotenvdirs)
 	$(dotenv) $^ | sort > $@
 
+clean:
+	rm -f .env
+	rm -f .secrets
+
 help:
 	@line=$$(grep -n '^.PHONY:[[:space:]]*help' Makefile | cut -d':' -f1)
 	tail Makefile --lines=+$$line
@@ -117,4 +139,3 @@ help:
 .PHONY: push-git
 .PHONY: all
 .PHONY: dotenv
-
